@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Zixiang Wang" />
+
+<meta name="date" content="2025-06-17" />
+
+<title>STDistance - Spatial Transcriptomics Distance Calculation and Visualization</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">STDistance - Spatial Transcriptomics
+Distance Calculation and Visualization</h1>
+<h4 class="author">Zixiang Wang</h4>
+<h4 class="date">2025-06-17</h4>
+
+
+
+<div id="description" class="section level2">
+<h2>Description</h2>
+<p>STDistance is an R package designed for analyzing spatial
+relationships between cell types in spatial transcriptomics data. It
+calculates nearest neighbor distances between specified cell types and
+provides comprehensive visualization tools to explore spatial patterns.
+The package is particularly useful for studying cell-cell interactions,
+immune microenvironment characterization, and spatial organization of
+tissues.</p>
+<p>Key features include:</p>
+<ul>
+<li>Distance calculation between reference and target cell types</li>
+<li>Boxplot visualization of distance distributions</li>
+<li>Radial network visualization of spatial relationships</li>
+<li>Spatial mapping of cell type interactions</li>
+<li>Correlation analysis between gene expression and spatial
+distances</li>
+</ul>
+</div>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Install from CRAN</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;STDistance&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># Or install the development version from GitHub:</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co"># install.packages(&quot;devtools&quot;)</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;PrinceWang2018/ST_Distance&quot;</span>)</span></code></pre></div>
+</div>
+<div id="dependencies" class="section level2">
+<h2>Dependencies</h2>
+<p>STDistance requires R (≥ 4.0.0) and depends on the following
+packages:</p>
+<ul>
+<li>dplyr</li>
+<li>ggplot2</li>
+<li>Hmisc</li>
+<li>scales</li>
+<li>stats</li>
+<li>RColorBrewer</li>
+<li>tidyr</li>
+</ul>
+</div>
+<div id="input-file-preparation" class="section level2">
+<h2>Input File Preparation</h2>
+<p>STDistance requires two input files:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Spatial coordinates file</strong> (e.g.,
+<code>tissue_positions.csv</code>):</p>
+<ul>
+<li><p>Should contain spatial coordinates of spots/cells</p></li>
+<li><p>Must include columns for barcode, x and y coordinates</p></li>
+<li><p>For multiple samples, include “Sample” and “Newbarcode”
+columns</p></li>
+<li><p>Example format:</p>
+<pre><code>barcode,in_tissue,array_row,array_col,pxl_row_in_fullres,pxl_col_in_fullres
+,Sample,Sampleid,Newbarcode
+AAACCCAAGGCTTTCA-1_1,1,50,102,4950,10020,Sample1,1,AAACCCAAGGCTTTCA-1_1</code></pre></li>
+</ul></li>
+<li><p><strong>Metadata file</strong> (e.g.,
+<code>metadata.csv</code>):</p>
+<ul>
+<li><p>Should contain cell type annotations and any expression
+metrics</p></li>
+<li><p>Must include: orig.ident, celltype columns</p></li>
+<li><p>The first colume must match the barcode/newbarcode column in
+tissue_positions.csv</p></li>
+<li><p>May include gene expression or splicing index values</p></li>
+<li><p>Example format:</p>
+<pre><code>,orig.ident,nCount_Spatial,nFeature_Spatial,nCount_SCT,nFeature_SCT,
+integrated_snn_res.0.8,seurat_clusters,celltype_ABCDepi,gen2_SPLIz_numeric
+AAATCGTGTACCACAA-1_6,SP6,5403,2647,6486,2601,5,5,Epithelial_cells_B,0.96565309
+AACCCTACTGTCAATA-1_6,SP6,40683,8876,8578,4328,4,4,Epithelial_cells_A,-0.300446291</code></pre></li>
+<li><p>Can be exported from Seurat object using:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(Seurat)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>RDS<span class="ot">&lt;-</span><span class="fu">readRDS</span>(<span class="st">&quot;./demo/Demo_SP8_SP6.RDS&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">write.csv</span>(RDS<span class="sc">@</span>meta.data,<span class="at">file =</span> <span class="st">&quot;./demo/Demo_SP6_SP8_metadata.csv&quot;</span>,<span class="at">quote =</span> F)</span></code></pre></div></li>
+</ul></li>
+</ol>
+</div>
+<div id="basic-workflow" class="section level2">
+<h2>Basic Workflow</h2>
+<p>Demo data is available in the <code>demo</code> folder of the R
+package installed from GitHub. Alternatively, you can download the files
+directly using the following commands:</p>
+<pre class="shell"><code>wget https://github.com/PrinceWang2018/ST_Distance/raw/master/demo/Demo_SP6_SP8_metadata.csv  
+wget https://github.com/PrinceWang2018/ST_Distance/raw/master/demo/Demo_SP6_SP8_tissue_positions.csv  
+wget https://github.com/PrinceWang2018/ST_Distance/raw/master/demo/Demo_SP8_SP6.RDS  </code></pre>
+<p>Below is a basic workflow demonstrating how to use the demo data for
+reference:</p>
+<div id="load-required-packages-and-data" class="section level3">
+<h3>1. Load required packages and data</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">library</span>(STDistance)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">&quot;R package dir or work dir&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># Load spatial coordinates</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>tissue_posi <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./demo/Demo_SP6_SP8_tissue_positions.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co"># Load metadata</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./demo/Demo_SP6_SP8_metadata.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span></code></pre></div>
+</div>
+<div id="normalize-spatial-coordinates" class="section level3">
+<h3>2. Normalize spatial coordinates</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>tissue_posi_normalized <span class="ot">&lt;-</span> <span class="fu">normalize_spatial</span>(tissue_posi)</span></code></pre></div>
+</div>
+<div id="merge-spatial-and-metadata-information" class="section level3">
+<h3>3. Merge spatial and metadata information</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>posi <span class="ot">&lt;-</span> <span class="fu">merge</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">x =</span> tissue_posi_normalized,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">y =</span> metadata,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">by.x =</span> <span class="st">&quot;Newbarcode&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">by.y =</span> <span class="st">&quot;row.names&quot;</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">all.y =</span> <span class="cn">TRUE</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="calculate-nearest-distances-between-cell-types" class="section level3">
+<h3>4. Calculate nearest distances between cell types</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>distance_results <span class="ot">&lt;-</span> <span class="fu">calculate_nearest_distances</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  posi,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">reference_type =</span> <span class="st">&quot;Macrophage&quot;</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">target_types =</span> <span class="fu">c</span>(<span class="st">&quot;Epithelial_cells_A&quot;</span>, <span class="st">&quot;Epithelial_cells_B&quot;</span>, <span class="st">&quot;Epithelial_cells_C&quot;</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">x_col =</span> <span class="st">&quot;pxl_row_in_fullres&quot;</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">y_col =</span> <span class="st">&quot;pxl_col_in_fullres&quot;</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">id_col =</span> <span class="st">&quot;Newbarcode&quot;</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">type_col =</span> <span class="st">&quot;celltype_ABCDepi&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="compare-distance-among-subgroups" class="section level3">
+<h3>5. Compare distance among subgroups</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">plot_distance_boxplot</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  distance_results,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">id_col =</span> <span class="st">&quot;Newbarcode&quot;</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">show_points =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">y_scale =</span> <span class="st">&quot;log10&quot;</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">palette =</span> <span class="st">&quot;Dark2&quot;</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="create-radial-network-visualization" class="section level3">
+<h3>6. Create radial network visualization</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">plot_radial_distance</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  distance_results,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">id_col =</span> <span class="st">&quot;Newbarcode&quot;</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">reference_type =</span> <span class="st">&quot;Macrophage&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">label_padding =</span> <span class="fl">0.3</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">show_labels =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">palette =</span> <span class="st">&quot;Dark2&quot;</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="spatial-visualization-of-interactions" class="section level3">
+<h3>7. Spatial visualization of interactions</h3>
+<p>Between two cell types:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">visualize_spatial_network</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  posi,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">sample =</span> <span class="st">&quot;SP8&quot;</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">reference_type =</span> <span class="st">&quot;Macrophage&quot;</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">target_type =</span> <span class="st">&quot;Epithelial_cells_A&quot;</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">x_col =</span> <span class="st">&quot;pxl_row_in_fullres&quot;</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="at">y_col =</span> <span class="st">&quot;pxl_col_in_fullres&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  <span class="at">type_col =</span> <span class="st">&quot;celltype_ABCDepi&quot;</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  <span class="at">color_palette =</span> <span class="fu">c</span>(<span class="st">&quot;Macrophage&quot;</span> <span class="ot">=</span> <span class="st">&quot;#90ee90&quot;</span>, <span class="st">&quot;Epithelial_cells_A&quot;</span> <span class="ot">=</span> <span class="st">&quot;#377EB8&quot;</span>),</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.7</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>)</span></code></pre></div>
+<p>Between reference and multiple target types:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">visualize_spatial_multinetwork</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  posi,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">sample =</span> <span class="st">&quot;SP8&quot;</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">reference_type =</span> <span class="st">&quot;Macrophage&quot;</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="at">target_type =</span> <span class="fu">c</span>(<span class="st">&quot;Epithelial_cells_A&quot;</span>, <span class="st">&quot;Epithelial_cells_B&quot;</span>),</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="at">type_col =</span> <span class="st">&quot;celltype_ABCDepi&quot;</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="at">color_palette =</span> <span class="fu">c</span>(<span class="st">&quot;Macrophage&quot;</span> <span class="ot">=</span> <span class="st">&quot;#90ee90&quot;</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>                   <span class="st">&quot;Epithelial_cells_A&quot;</span> <span class="ot">=</span> <span class="st">&quot;#377EB8&quot;</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>                   <span class="st">&quot;Epithelial_cells_B&quot;</span> <span class="ot">=</span> <span class="st">&quot;#E41A1C&quot;</span>),</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="at">point_alpha =</span> <span class="fl">0.7</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>)</span></code></pre></div>
+<p>With expression gradient:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">visualize_spatial_gradient</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="at">spatial_data =</span> posi,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="at">sample =</span> <span class="st">&quot;SP8&quot;</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="at">gradient_type =</span> <span class="st">&quot;Epithelial_cells_A&quot;</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  <span class="at">fixed_type =</span> <span class="st">&quot;Macrophage&quot;</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  <span class="at">expression_col =</span> <span class="st">&quot;gen2_SPLIz_numeric&quot;</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  <span class="at">type_col =</span> <span class="st">&quot;celltype_ABCDepi&quot;</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>  <span class="at">fixed_color =</span> <span class="st">&quot;#CCCCCC&quot;</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>  <span class="at">line_color =</span> <span class="st">&quot;#444444&quot;</span>,</span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>  <span class="at">gradient_palette =</span> <span class="st">&quot;viridis&quot;</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>  <span class="at">point_size =</span> <span class="fl">1.5</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  <span class="at">point_alpha =</span> <span class="fl">0.9</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="correlation-analysis" class="section level3">
+<h3>8. Correlation analysis</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>result_correlation <span class="ot">&lt;-</span> <span class="fu">calculate_correlations</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="at">spatial_data =</span> posi,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">distance_results =</span> distance_results,</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="at">spatial_feature =</span> <span class="st">&quot;gen2_SPLIz_numeric&quot;</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  <span class="at">distance_metric =</span> <span class="st">&quot;Epithelial_cells_A&quot;</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;pearson&quot;</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="at">plot =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="at">plot_title =</span> <span class="st">&quot;Correlation between Gene Expression and Distance&quot;</span></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>)</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;Correlation coefficient:&quot;</span>, result_correlation<span class="sc">$</span>estimate))</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;P-value:&quot;</span>, result_correlation<span class="sc">$</span>p_value))</span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>result_correlation<span class="sc">$</span>plot</span></code></pre></div>
+</div>
+</div>
+<div id="applications" class="section level2">
+<h2>Applications</h2>
+<p>STDistance can be used for various spatial transcriptomics
+analyses:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Cell-cell interaction networks</strong>: Visualize spatial
+relationships between different cell types</li>
+<li><strong>Immune microenvironment characterization</strong>: Study
+spatial organization of immune cells</li>
+<li><strong>Key gene effects on interactions</strong>: Analyze how
+immune checkpoint genes influence cell proximity</li>
+<li><strong>Spatial patterns and disease</strong>: Investigate
+associations between cell type distributions and clinical outcomes</li>
+<li><strong>Tumor microenvironment</strong>: Study spatial relationships
+between tumor cells and stromal components</li>
+</ol>
+</div>
+<div id="limitations" class="section level2">
+<h2>Limitations</h2>
+<ol style="list-style-type: decimal">
+<li><strong>Distance is only one aspect of cell communication</strong>:
+While spatial proximity suggests potential interactions, true cell-cell
+communication should be validated with receptor-ligand analysis tools
+like CellChat or NicheNet that consider molecular expression
+profiles.</li>
+<li><strong>Resolution limitations</strong>: Current spatial
+transcriptomics demo have resolution limits (50μm spot size).
+Single-cell resolution spatial data (10xVisium HD or other poly(A) /
+probes captured high resolution data) will provide more accurate
+distance measurements and increase detection power for spatial
+relationships.</li>
+</ol>
+</div>
+<div id="troubleshooting" class="section level2">
+<h2>Troubleshooting</h2>
+<p>Common issues and solutions:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Missing columns error</strong>: Ensure your input files
+contain all required columns:
+<ul>
+<li>Spatial file: Must have coordinate columns (default
+“pxl_row_in_fullres” and “pxl_col_in_fullres”)</li>
+<li>Metadata: Must have cell type annotation column</li>
+</ul></li>
+<li><strong>No distances calculated</strong>: Check that:
+<ul>
+<li>Your reference and target cell types exist in the metadata</li>
+<li>The type_col parameter correctly specifies your cell type column
+name</li>
+<li>There are actually cells of the specified types in your sample</li>
+</ul></li>
+<li><strong>Visualization issues</strong>:
+<ul>
+<li>For crowded plots, try adjusting point_size and alpha
+parameters</li>
+<li>For color issues, specify a custom color_palette</li>
+</ul></li>
+</ol>
+</div>
+<div id="citation" class="section level2">
+<h2>Citation</h2>
+<p>If you use STDistance in your research, please cite:</p>
+<blockquote>
+<p>Wang, Z., Yang, L., Yang, S., Li, G., Xu, M., Kong, B., Shao, C.,
+&amp; Liu, Z. (2025). Isoform switch of CD47 provokes
+macrophage-mediated pyroptosis in ovarian cancer. bioRxiv,
+2025.2004.2017.649282. <a href="https://doi.org/10.1101/2025.04.17.649282" class="uri">https://doi.org/10.1101/2025.04.17.649282</a></p>
+</blockquote>
+</div>
+<div id="contact" class="section level2">
+<h2>Contact</h2>
+<p>For questions or issues, please contact:</p>
+<ul>
+<li><a href="mailto:970214035yl@gmail.com" class="email">970214035yl@gmail.com</a> or <a href="mailto:wangzixiang@sdu.edu.cn" class="email">wangzixiang@sdu.edu.cn</a></li>
+<li>GitHub issues: <a href="https://github.com/PrinceWang2018/ST_Distance/issues" class="uri">https://github.com/PrinceWang2018/ST_Distance/issues</a></li>
+</ul>
+</div>
+<div id="license" class="section level2">
+<h2>License</h2>
+<p>GPL-3 © Zixiang Wang, Lei Yang, Zhaojian Liu</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">library</span>(STDistance)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co">#&gt; =========================================================================================</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co">#&gt; STDistance version 0.6.4</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co">#&gt; Project URL: https://github.com/PrinceWang2018/STDistance</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="co">#&gt; If you use it in published research, please cite:</span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="co">#&gt; Wang, Z., Yang, L., Yang, S., Li, G., Xu, M., Kong, B., Shao, C., &amp; Liu, Z. (2025).</span></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="co">#&gt; Isoform switch of CD47 provokes macrophage-mediated pyroptosis in ovarian cancer.</span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="co">#&gt; bioRxiv, 2025.2004.2017.649282. https://doi.org/10.1101/2025.04.17.649282</span></span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt; =========================================================================================</span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt;                        --A joyful heart is good medicine! ^_^--</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
