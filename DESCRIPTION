@@ -1,6 +1,6 @@
 Package: STDistance
 Title: Spatial Transcriptomics Distance Calculation and Visualization
-Version: 0.6.4
+Version: 0.6.6
 Authors@R: 
     c(person(given = "Zixiang", family = "Wang", 
              email = "wangzixiang@sdu.edu.cn", 
@@ -22,11 +22,11 @@ Suggests: testthat, knitr, rmarkdown
 LazyData: true
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2025-06-17 11:41:36 UTC; wzx
+Packaged: 2025-07-22 11:55:21 UTC; wzx
 Author: Zixiang Wang [aut, cre] (ORCID:
     <https://orcid.org/0000-0001-5252-9764>),
   Lei Yang [aut],
   Zhaojian Liu [aut]
 Maintainer: Zixiang Wang <wangzixiang@sdu.edu.cn>
 Repository: CRAN
-Date/Publication: 2025-06-18 11:50:10 UTC
+Date/Publication: 2025-07-22 13:00:55 UTC
