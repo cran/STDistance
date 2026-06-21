@@ -1,5 +1,5 @@
 # STDistance - Spatial Transcriptomics Distance Calculation and Visualization
-
+[![DOI](https://zenodo.org/badge/999352906.svg)](https://doi.org/10.5281/zenodo.17149296)
 ## Description
 
 STDistance is an R package designed for analyzing spatial relationships between cell types in spatial transcriptomics data. It calculates nearest neighbor distances between specified cell types and provides comprehensive visualization tools to explore spatial patterns. The package is particularly useful for studying cell-cell interactions, immune microenvironment characterization, and spatial organization of tissues.
@@ -125,6 +125,8 @@ posi <- merge(
 
 ### 4. Calculate nearest distances between cell types
 
+Distances are computed **within each sample independently** via `sample_col`, so cells from different tissue sections are never compared.
+
 ```r
 distance_results <- calculate_nearest_distances(
   posi,
@@ -133,7 +135,8 @@ distance_results <- calculate_nearest_distances(
   x_col = "pxl_row_in_fullres",
   y_col = "pxl_col_in_fullres",
   id_col = "Newbarcode",
-  type_col = "celltype_ABCDepi"
+  type_col = "celltype_ABCDepi",
+  sample_col = "orig.ident"   # ensures per-sample distance calculation
 )
 ```
 
@@ -219,6 +222,7 @@ result_correlation <- calculate_correlations(
   distance_results = distance_results,
   spatial_feature = "gen2_SPLIz_numeric",
   distance_metric = "Epithelial_cells_A",
+  id_col = "Newbarcode",
   method = "pearson",
   plot = TRUE,
   plot_title = "Correlation between Gene Expression and Distance"

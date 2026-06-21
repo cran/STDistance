@@ -1,0 +1,15 @@
+bibentry(
+  bibtype = "Manual",
+  title = "STDistance - Spatial Transcriptomics Distance Calculation and Visualization",
+  author = c(person(given = "Zixiang", family = "Wang", email = "wangzixiang917@gmail.com", role = c("aut", "cre"))),
+  year = "2026",
+  url = "https://github.com/PrinceWang2018/ST_Distance",
+  version = "v0.6.8-zenodo",
+  note = "R package version 0.6.8-zenodo",
+  textVersion = paste(
+    "Wang Z (2026).",
+    "STDistance - Spatial Transcriptomics Distance Calculation and Visualization.",
+    "R package version 0.6.8-zenodo,",
+    "URL: https://github.com/PrinceWang2018/ST_Distance"
+  )
+)

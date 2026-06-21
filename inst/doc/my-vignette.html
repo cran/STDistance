@@ -12,7 +12,7 @@
 
 <meta name="author" content="Zixiang Wang" />
 
-<meta name="date" content="2025-07-22" />
+<meta name="date" content="2026-06-21" />
 
 <title>STDistance - Spatial Transcriptomics Distance Calculation and Visualization</title>
 
@@ -50,6 +50,7 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -341,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">STDistance - Spatial Transcriptomics
 Distance Calculation and Visualization</h1>
 <h4 class="author">Zixiang Wang</h4>
-<h4 class="date">2025-07-22</h4>
+<h4 class="date">2026-06-21</h4>
 
 
 
@@ -462,6 +463,9 @@ reference:</p>
 </div>
 <div id="calculate-nearest-distances-between-cell-types" class="section level3">
 <h3>4. Calculate nearest distances between cell types</h3>
+<p>Distances are computed <strong>within each sample
+independently</strong> via <code>sample_col</code>, so cells from
+different tissue sections are never compared.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>distance_results <span class="ot">&lt;-</span> <span class="fu">calculate_nearest_distances</span>(</span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  posi,</span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">reference_type =</span> <span class="st">&quot;Macrophage&quot;</span>,</span>
@@ -469,8 +473,9 @@ reference:</p>
 <span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">x_col =</span> <span class="st">&quot;pxl_row_in_fullres&quot;</span>,</span>
 <span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">y_col =</span> <span class="st">&quot;pxl_col_in_fullres&quot;</span>,</span>
 <span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">id_col =</span> <span class="st">&quot;Newbarcode&quot;</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">type_col =</span> <span class="st">&quot;celltype_ABCDepi&quot;</span></span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">type_col =</span> <span class="st">&quot;celltype_ABCDepi&quot;</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">sample_col =</span> <span class="st">&quot;orig.ident&quot;</span>   <span class="co"># ensures per-sample distance calculation</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="compare-distance-among-subgroups" class="section level3">
 <h3>5. Compare distance among subgroups</h3>
@@ -541,14 +546,15 @@ reference:</p>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">distance_results =</span> distance_results,</span>
 <span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="at">spatial_feature =</span> <span class="st">&quot;gen2_SPLIz_numeric&quot;</span>,</span>
 <span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  <span class="at">distance_metric =</span> <span class="st">&quot;Epithelial_cells_A&quot;</span>,</span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;pearson&quot;</span>,</span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="at">plot =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="at">plot_title =</span> <span class="st">&quot;Correlation between Gene Expression and Distance&quot;</span></span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>)</span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;Correlation coefficient:&quot;</span>, result_correlation<span class="sc">$</span>estimate))</span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;P-value:&quot;</span>, result_correlation<span class="sc">$</span>p_value))</span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>result_correlation<span class="sc">$</span>plot</span></code></pre></div>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="at">id_col =</span> <span class="st">&quot;Newbarcode&quot;</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;pearson&quot;</span>,</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="at">plot =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>  <span class="at">plot_title =</span> <span class="st">&quot;Correlation between Gene Expression and Distance&quot;</span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>)</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;Correlation coefficient:&quot;</span>, result_correlation<span class="sc">$</span>estimate))</span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;P-value:&quot;</span>, result_correlation<span class="sc">$</span>p_value))</span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>result_correlation<span class="sc">$</span>plot</span></code></pre></div>
 </div>
 </div>
 <div id="applications" class="section level2">
@@ -633,7 +639,7 @@ macrophage-mediated pyroptosis in ovarian cancer. bioRxiv,
 <p>GPL-3 © Zixiang Wang, Lei Yang, Zhaojian Liu</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">library</span>(STDistance)</span>
 <span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co">#&gt; =========================================================================================</span></span>
-<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co">#&gt; STDistance version 0.6.6</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co">#&gt; STDistance version 0.6.8</span></span>
 <span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co">#&gt; Project URL: https://github.com/PrinceWang2018/ST_Distance</span></span>
 <span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="co">#&gt; If you use it in published research, please cite:</span></span>
 <span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="co">#&gt; Wang, Z., Yang, L., Yang, S., Li, G., Xu, M., Kong, B., Shao, C., &amp; Liu, Z. (2025).</span></span>
